@@ -55,6 +55,12 @@
 .math-awards{left:77%;top:82%;width:22%;height:16%}
 .math-response{display:block;width:100%;max-width:520px;padding:15px 18px;margin:12px 0 18px;border:2px solid #c8b8e1;border-radius:14px;background:white;font-size:20px;direction:rtl}
 .math-response:focus{outline:3px solid #e7ddff}
+.math-visual{margin:15px 0 22px;padding:17px;background:#f6f0ff;border:1px solid #dcd0ef;border-radius:18px;text-align:center;overflow:auto}
+.math-visual p{font-weight:700;margin:0 0 12px}.math-fraction-strip{display:inline-flex;direction:ltr;vertical-align:middle;margin:6px;gap:3px}
+.math-fraction-strip>span{display:inline-block;width:45px;height:52px;background:#fff;border:2px solid #8b6ab5;border-radius:5px}
+.math-fraction-strip>span.shaded{background:#9d7ad2}
+.math-groups{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.math-groups>span{background:white;border:2px dashed #9d7ad2;border-radius:12px;padding:10px;line-height:2}
+.math-data-row{display:flex;align-items:center;gap:10px;margin:10px auto;max-width:480px;text-align:right}.math-data-row>span{width:75px}.math-data-bar{height:24px;background:#9d7ad2;border-radius:6px}.math-rectangle{width:210px;height:105px;border:4px solid #8b6ab5;display:grid;place-items:center;margin:10px auto;background:white}
 </style></head><body><aside><h2>✦ نافس</h2><p class="small">رحلة التعلم والإنجاز</p><nav id="nav"><button class="active" data-page="home">⌂ الرئيسية</button><button data-page="intro">✧ أتهيأ لنافس</button><button data-page="reading">▤ القراءة</button><button data-page="math">▦ الرياضيات</button><div id="subjectNav" class="subject-nav" hidden></div><button data-page="teacher">▣ للمعلمة</button></nav></aside><main><section class="page active" id="home">
 <div class="illustrated-home">
 <img class="scene-image" src="nafis-home.png" alt="رحلة نافس: عالم القراءة والرياضيات، مع شخصيتي المستكشف والمستكشفة" loading="eager">
@@ -215,10 +221,26 @@ function mathAnswerMatches(value,expected){
  if(v&&e.includes('=')&&v===e.split('=').pop())return true;
  return false;
 }
+
+function mathVisualModel(){
+ const m=mathMissionIndex,i=mathQuestionIndex;
+ const tiles=(count,filled)=>'<span class="math-fraction-strip" aria-label="'+filled+' أجزاء مظللة من '+count+'">'+Array.from({length:count},(_,j)=>'<span class="'+(j<filled?'shaded':'')+'"></span>').join('')+'</span>';
+ if(m===4&&i===0)return '<div class="math-visual"><p>فطيرة مقسمة إلى أربعة أجزاء متساوية، جزء واحد مظلل:</p>'+tiles(4,1)+'</div>';
+ if(m===4&&i===1)return '<div class="math-visual"><p>قارن الجزأين المظَلَّلين:</p><div>نصف: '+tiles(4,2)+'</div><div>ربع: '+tiles(4,1)+'</div></div>';
+ if(m===4&&i===2)return '<div class="math-visual"><p>هل الجزء المظلل متساوٍ في الشكلين؟</p><div>'+tiles(2,1)+' = '+tiles(4,2)+'</div></div>';
+ if(m===2&&i===0)return '<div class="math-visual"><p>ثلاث مجموعات، في كل مجموعة أربع نقاط:</p><div class="math-groups">'+Array.from({length:3},()=>'<span>● ●<br>● ●</span>').join('')+'</div></div>';
+ if(m===2&&i===5)return '<div class="math-visual"><p>٣٢ قلمًا موزعة بالتساوي على ٤ مجموعات</p><div class="math-groups">'+Array.from({length:4},()=>'<span>✏️ ✏️ ✏️ ✏️<br>✏️ ✏️ ✏️ ✏️</span>').join('')+'</div></div>';
+ if(m===4&&[3,4].includes(i)){
+  const values=i===3?[['التفاح',8],['الموز',5]]:[['البرتقال',12],['التفاح',7]];
+  return '<div class="math-visual"><p>اقرأ بيانات المبيعات:</p>'+values.map(([label,n])=>'<div class="math-data-row"><span>'+label+'</span><div class="math-data-bar" style="width:'+(n/12*65)+'%"></div><b>'+n+'</b></div>').join('')+'</div>';
+ }
+ if(m===3&&i===5)return '<div class="math-visual"><p>مستطيل طوله ٦ سم وعرضه ٣ سم:</p><div class="math-rectangle">٦ سم × ٣ سم</div></div>';
+ return '';
+}
 function showMathQuestion(){
  mathQuestionAttempts=0;
  const q=mathChallenges[mathMissionIndex][mathQuestionIndex],objective=mathObjectives[mathMissionIndex][mathQuestionIndex];
- document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><span class="tag">المحطة ${mathMissionIndex+1} من ٦</span><h1>${mathMissions[mathMissionIndex]}</h1><p>التحدي ${mathQuestionIndex+1} من ٦</p></div><div class="question"><p class="tag">🎯 الهدف: ${objective}</p><h2>${q[0]}</h2><label for="mathResponse">اكتب إجابتك هنا</label><input id="mathResponse" class="math-response" type="text" autocomplete="off" inputmode="text" placeholder="إجابتك" onkeydown="if(event.key==='Enter')checkMathAnswer()" /><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="checkMathAnswer()">تحقق من إجابتي</button></div><div id="mathAnswer" class="feedback" aria-live="polite"></div></div>`;
+ document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><span class="tag">المحطة ${mathMissionIndex+1} من ٦</span><h1>${mathMissions[mathMissionIndex]}</h1><p>التحدي ${mathQuestionIndex+1} من ٦</p></div><div class="question"><p class="tag">🎯 الهدف: ${objective}</p><h2>${q[0]}</h2>${mathVisualModel()}<label for="mathResponse">اكتب إجابتك هنا</label><input id="mathResponse" class="math-response" type="text" autocomplete="off" inputmode="text" placeholder="إجابتك" onkeydown="if(event.key==='Enter')checkMathAnswer()" /><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="checkMathAnswer()">تحقق من إجابتي</button></div><div id="mathAnswer" class="feedback" aria-live="polite"></div></div>`;
 }
 function checkMathAnswer(){
  const input=document.getElementById('mathResponse'),q=mathChallenges[mathMissionIndex][mathQuestionIndex];
