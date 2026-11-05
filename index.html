@@ -199,7 +199,11 @@ function renderSubject(){
  const info=subjects[subject],root=document.getElementById(subject+'Content');
  const top=`<div class="subject-head"><span class="tag">${info.emoji} ${info.title} فقط</span><h1>${info.emoji} عالم ${info.title}</h1><p class="small">جميع الأنشطة والإنجازات هنا تخص ${info.title} فقط.</p></div>`;
  let body='';
- if(tab==='home'){
+ if(tab==='home' && subject==='math'){
+  mathLibrary();return;
+ } else if(tab==='home' && subject==='reading'){
+  readingLibrary();return;
+ } else if(tab==='home'){
   body=`<div class="cards subject-cards">
   <div class="card"><div class="emoji">📚</div><h2>أتعلم</h2><p>استكشف مهارات ${info.title} وحدها.</p><button onclick="go('${subject}','learn')">ابدأ التعلم ←</button></div>
   <div class="card"><div class="emoji">✏️</div><h2>أتدرب</h2><p>${subject==='reading'?'مغامرات قرائية، ونجوم وتحديات مبنية على القصص.':'تدريب تجريبي خاص بالرياضيات مع تصحيح فوري.'}</p><button onclick="go('${subject}','practice')">ابدأ التدريب ←</button></div>
