@@ -230,12 +230,20 @@ let mathQuestionAttempts=0;
 function mathTokensOnly(v){return v.match(/[-+]?\d+(?:\.\d+)?/g)||[]}
 function mathAnswerMatches(value,expected){
  const v=normalizeMathAnswer(value),e=normalizeMathAnswer(expected);
+ if(!v)return false;
  if(v===e)return true;
- if(mathTokensOnly(e).length>1){const a=mathTokensOnly(v),b=mathTokensOnly(e);return a.length===b.length&&a.every((n,i)=>Number(n)===Number(b[i]));}
- const digit=v.match(/^[-+]?\d+(?:\.\d+)?$/);
- const expectedDigit=e.match(/^[-+]?\d+(?:\.\d+)?/);
- if(digit&&expectedDigit&&mathTokensOnly(e).length===1&&Number(v)===Number(expectedDigit[0]))return true;
- if(v&&e.includes('=')&&v===e.split('=').pop())return true;
+ // Numeric answers may include a written unit, but not unrelated numbers.
+ const numeric=(x)=>/^[-+]?\d+(?:\.\d+)?$/.test(x);
+ const unitValue=(x)=>x.replace(/(سنتيمتر(?:ات)?|سم|دقيقه|دقائق|متر(?:ا|ان)?|امتار|م|كيلوغرام|كجم|جرام|غرام|جم)$/,'');
+ if(numeric(unitValue(v))&&numeric(unitValue(e)))return Number(unitValue(v))===Number(unitValue(e));
+ // Fraction answers must preserve numerator and denominator; never compare by digit sequence alone.
+ if(/^\d+\/\d+$/.test(v)&&/^\d+\/\d+$/.test(e))return v===e;
+ // Accept the numerical result of a reference equation only for arithmetic equations.
+ if(e.includes('=')&&numeric(v)&&numeric(e.split('=').pop()))return Number(v)===Number(e.split('=').pop());
+ // Allow a multiplication statement without its computed result if factors match.
+ if(e.includes('=')&&v===e.split('=')[0])return true;
+ // Written equivalent expressions may vary in spacing and digit glyphs.
+ if(v.replace(/[()]/g,'')===e.replace(/[()]/g,''))return true;
  return false;
 }
 
@@ -299,7 +307,7 @@ function checkMathAnswer(){
  const correct=mathAnswerMatches(input.value,q[1]),key=mathMissionIndex+'-'+mathQuestionIndex;
  mathQuestionAttempts++;
  const prev=mathAttemptResults[key]||{attempts:0,correct:false};
- mathAttemptResults[key]={attempts:prev.attempts+1,correct:prev.correct||correct,firstTryCorrect:mathQuestionAttempts===1?correct:(prev.firstTryCorrect||false),needsSupport:!correct,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
+ mathAttemptResults[key]={...prev,attempts:prev.attempts+1,correct:prev.correct||correct,firstTryCorrect:mathQuestionAttempts===1?correct:prev.firstTryCorrect===true,needsSupport:mathQuestionAttempts===1?!correct:prev.needsSupport===true,latestFirstTryCorrect:mathQuestionAttempts===1?correct:prev.latestFirstTryCorrect===true,latestNeededSupport:mathQuestionAttempts===1?!correct:prev.latestNeededSupport===true,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
  try{localStorage.setItem('nafis-math-indicator-results',JSON.stringify(mathAttemptResults))}catch(e){}
  if(!correct&&mathQuestionAttempts===1){output.innerHTML='<strong>💡 جرّب مرة ثانية</strong><p>'+mathHints[mathMissionIndex][mathQuestionIndex]+'</p>';input.focus();return}
  if(correct&&mathQuestionAttempts===1)mathCorrect++;
@@ -318,7 +326,7 @@ function unifiedProgressReport(){
  const rFirst=readingEntries.filter(x=>x.firstTryCorrect).length;
  const rSupport=readingEntries.filter(x=>x.neededSupport).length;
  const mFirst=mathEntries.filter(x=>x.firstTryCorrect).length;
- const mSupport=mathEntries.filter(x=>x.needsSupport||x.remedialAttempts>0).length;
+ const mSupport=mathEntries.filter(x=>x.latestNeededSupport===true||(x.latestNeededSupport===undefined&&(x.needsSupport||x.remedialAttempts>0))).length;
  const weakMath=mathEntries.filter(x=>x.needsSupport||x.remedialCorrect===false).slice(0,8);
  const weakReading=readingEntries.filter(x=>x.neededSupport&&!x.firstTryCorrect).slice(0,8);
  return '<div class="card unified-report"><h2>📊 لوحة متابعة التعلم</h2><p class="small">تعتمد على المحاولات المسجلة على هذا الجهاز فقط. النتائج مؤشرات تدريبية وليست قياس إتقان رسميًا.</p><div class="progress-report-grid"><div><h3>📖 القراءة</h3><p>أسئلة مسجلة: '+readingEntries.length+'</p><p>صحيح من أول محاولة: '+rFirst+'</p><p>احتاجت دعمًا: '+rSupport+'</p></div><div><h3>🔢 الرياضيات</h3><p>أسئلة مسجلة: '+mathEntries.length+'</p><p>صحيح من أول محاولة: '+mFirst+'</p><p>احتاجت دعمًا: '+mSupport+'</p></div></div><h3>🎯 أولويات التدريب التالية</h3>'+(weakReading.length?'<p><strong>القراءة:</strong> '+[...new Set(weakReading.map(x=>readingIndicatorNames[x.indicator-1]))].join('، ')+'</p>':'<p>القراءة: لا توجد مهارات تحتاج دعمًا في المحاولات المسجلة حاليًا.</p>')+(weakMath.length?'<p><strong>الرياضيات:</strong> '+[...new Set(weakMath.map(x=>x.objective))].join('، ')+'</p>':'<p>الرياضيات: لا توجد مهارات تحتاج دعمًا في المحاولات المسجلة حاليًا.</p>')+'<p class="small">إذا لم تُسجّل محاولات بعد، فلا يمكن استنتاج مستوى الطالب.</p></div>';
