@@ -45,6 +45,14 @@
 .station-water{left:68%;top:56%;width:25%;height:24%}
 .station-begin{left:35%;top:82%;width:32%;height:16%}
 .station-achievements{left:77%;top:82%;width:22%;height:16%}
+.math-station-1{left:20%;top:25%;width:22%;height:19%}
+.math-station-2{left:61%;top:26%;width:25%;height:19%}
+.math-station-3{left:39%;top:40%;width:25%;height:18%}
+.math-station-4{left:22%;top:57%;width:26%;height:18%}
+.math-station-5{left:55%;top:59%;width:26%;height:17%}
+.math-station-6{left:81%;top:45%;width:18%;height:20%}
+.math-begin{left:35%;top:81%;width:32%;height:17%}
+.math-awards{left:77%;top:82%;width:22%;height:16%}
 </style></head><body><aside><h2>✦ نافس</h2><p class="small">رحلة التعلم والإنجاز</p><nav id="nav"><button class="active" data-page="home">⌂ الرئيسية</button><button data-page="intro">✧ أتهيأ لنافس</button><button data-page="reading">▤ القراءة</button><button data-page="math">▦ الرياضيات</button><div id="subjectNav" class="subject-nav" hidden></div><button data-page="teacher">▣ للمعلمة</button></nav></aside><main><section class="page active" id="home">
 <div class="illustrated-home">
 <img class="scene-image" src="nafis-home.png" alt="رحلة نافس: عالم القراءة والرياضيات، مع شخصيتي المستكشف والمستكشفة" loading="eager">
@@ -149,6 +157,44 @@ function go(page,subtab='home'){
  updateHome();
  window.scrollTo(0,0);
 }
+const mathMissions=['وادي الأعداد','جسر الجمع والطرح','غابة الضرب والقسمة','مدينة الأشكال والقياس','سوق الكسور والبيانات','قلعة التحدي'];
+const mathChallenges=[
+[['ما قيمة الرقم ٧ في العدد ٤٬٧٣٢؟','٧٠٠'],['حلّل العدد ٣٬٥٢٤ إلى قيم منازله.','٣٠٠٠ + ٥٠٠ + ٢٠ + ٤'],['أي العددين أكبر: ٦٬٤٠٨ أم ٦٬٤٨٠؟','٦٬٤٨٠'],['رتّب تصاعديًا: ٢٬٣١٠، ٢٬١٣٠، ٢٬٣٠١','٢٬١٣٠، ٢٬٣٠١، ٢٬٣١٠'],['قرّب ٤٦٧ إلى أقرب عشرة.','٤٧٠'],['أكمل النمط: ١٢٠، ١٤٠، ١٦٠، …','١٨٠']],
+[['٢٤٨ + ١٣٥ = ؟','٣٨٣'],['٦٠٢ − ٢٧٨ = ؟','٣٢٤'],['قدّر ٣٨٧ + ٢١٤ بتقريب كل عدد إلى أقرب مئة.','٦٠٠'],['جمع الطلاب ١٢٥ كتابًا، ثم ٨٧ كتابًا. كم كتابًا جمعوا؟','٢١٢'],['في المكتبة ٣٥٠ قصة، أُعيرت ١٢٥ قصة. كم بقي؟','٢٢٥'],['كيف تتحقق من ٤٥٠ − ١٧٥ = ٢٧٥ باستخدام الجمع؟','٢٧٥ + ١٧٥ = ٤٥٠']],
+[['٤ + ٤ + ٤ تمثل أي عملية ضرب؟','٣ × ٤ = ١٢'],['٧ × ٦ = ؟','٤٢'],['أكمل: ٣ × ٨ = ٨ × …','٣'],['٢٤ ÷ ٦ = ؟','٤'],['إذا كان ٥ × ٧ = ٣٥، فما ناتج ٣٥ ÷ ٧؟','٥'],['وُزّع ٣٢ قلمًا بالتساوي على ٤ مجموعات. كم قلمًا لكل مجموعة؟','٨']],
+[['ما الشكل الذي له ٣ أضلاع و٣ رؤوس؟','المثلث'],['أي مجسم له ٦ أوجه مربعة متطابقة؟','المكعب'],['ما الوحدة الأنسب لقياس طول قلم؟','السنتيمتر'],['ما الوحدة الأنسب لقياس كتلة حقيبة مدرسية؟','الكيلوغرام'],['بدأت الحصة ٨:١٥ وانتهت ٩:٠٠. كم استغرقت؟','٤٥ دقيقة'],['مستطيل طوله ٦ سم وعرضه ٣ سم. ما محيطه؟','١٨ سم']],
+[['قُسمت فطيرة إلى ٤ أجزاء متساوية وأُخذ جزء. ما الكسر؟','١/٤'],['أيهما أكبر: ١/٢ أم ١/٤؟','١/٢'],['ما الكسر المكافئ لـ ١/٢: ٢/٤ أم ١/٤؟','٢/٤'],['بيع ٨ تفاحات و٥ موزات. أيهما أكثر مبيعًا؟','التفاح'],['بيع ١٢ برتقالة و٧ تفاحات. ما الفرق؟','٥'],['باعت ثلاثة أكشاك ٤ و٦ و٥ سلال. كم سلة بيعت؟','١٥']],
+[['لدى متجر ١٥٠ قلمًا، باع ٤٥ ثم استلم ٣٠. كم أصبح لديه؟','١٣٥'],['٦ صناديق في كل منها ٨ كرات، وُزعت على ٤ فرق بالتساوي. كم كرة لكل فريق؟','١٢'],['أكمل: ٥، ١٠، ٢٠، ٤٠، …','٨٠'],['بدأت رحلة ٩:٣٠ واستمرت ساعة و٢٠ دقيقة. متى انتهت؟','١٠:٥٠'],['حديقة مربعة طول ضلعها ٥ أمتار. ما محيطها؟','٢٠ مترًا'],['قرأ أحمد ٦ قصص، وسارة ٩، وخالد ٥. كم قصة قرأوا؟','٢٠']]
+];
+let mathResults={};try{mathResults=JSON.parse(localStorage.getItem('nafis-math-missions')||'{}')||{}}catch(e){}
+let mathMissionIndex=0,mathQuestionIndex=0,mathCorrect=0;
+function mathLibrary(){
+ const count=Object.keys(mathResults).length;
+ document.getElementById('mathContent').innerHTML=`<div class="reading-map-wrap">
+ <img class="scene-image" src="nafis-math-map.png" alt="خريطة مغامرات الرياضيات، ست محطات تعليمية" loading="eager">
+ <div class="reading-map-actions">
+ ${mathMissions.map((name,i)=>`<button class="scene-hotspot math-station-${i+1}" onclick="startMath(${i})" aria-label="المحطة ${i+1}: ${name}" title="${name}"></button>`).join('')}
+ <button class="scene-hotspot math-begin" onclick="startMath(0)" aria-label="ابدأ المغامرة الأولى"></button>
+ <button class="scene-hotspot math-awards" onclick="go('math','awards')" aria-label="إنجازاتي في الرياضيات"></button>
+ </div></div>
+ <div class="adventure-progress">🏅 ${count} من ٦ محطات مكتملة · ⭐ ${Object.values(mathResults).reduce((a,b)=>a+b,0)} إجابة صحيحة</div>`;
+}
+function startMath(i){mathMissionIndex=i;mathQuestionIndex=0;mathCorrect=0;showMathQuestion()}
+function showMathQuestion(){
+ const q=mathChallenges[mathMissionIndex][mathQuestionIndex];
+ document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><span class="tag">المحطة ${mathMissionIndex+1} من ٦</span><h1>${mathMissions[mathMissionIndex]}</h1><p>التحدي ${mathQuestionIndex+1} من ٦</p></div><div class="question"><h2>${q[0]}</h2><p>فكّر في الحل، ثم اضغط لإظهار الإجابة والتحقق من حلك.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="revealMathAnswer()">إظهار الإجابة</button></div><div id="mathAnswer" class="feedback" aria-live="polite"></div></div>`;
+}
+function revealMathAnswer(){
+ const q=mathChallenges[mathMissionIndex][mathQuestionIndex];
+ document.getElementById('mathAnswer').innerHTML=`<strong>الإجابة: ${q[1]}</strong><p>هل توصلت للإجابة الصحيحة؟</p><div class="mission-actions"><button onclick="advanceMath(false)">أحتاج تدريبًا</button><button class="primary" onclick="advanceMath(true)">أجبت بشكل صحيح ⭐</button></div>`;
+}
+function advanceMath(correct){
+ if(correct)mathCorrect++;
+ if(mathQuestionIndex<5){mathQuestionIndex++;showMathQuestion();return}
+ mathResults[mathMissionIndex]=Math.max(mathResults[mathMissionIndex]||0,mathCorrect);
+ try{localStorage.setItem('nafis-math-missions',JSON.stringify(mathResults))}catch(e){}
+ document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><h1>🏆 أنهيت ${mathMissions[mathMissionIndex]}</h1><p>إجاباتك الصحيحة بحسب تقييمك الذاتي: ${mathCorrect} من ٦</p><p>يمكنك إعادة المحطة لتحسين نتيجتك.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="startMath(mathMissionIndex)">إعادة التحدي</button></div></div>`;
+}
 function renderSubject(){
  const info=subjects[subject],root=document.getElementById(subject+'Content');
  const top=`<div class="subject-head"><span class="tag">${info.emoji} ${info.title} فقط</span><h1>${info.emoji} عالم ${info.title}</h1><p class="small">جميع الأنشطة والإنجازات هنا تخص ${info.title} فقط.</p></div>`;
@@ -160,15 +206,19 @@ function renderSubject(){
   <div class="card"><div class="emoji">🏆</div><h2>إنجازاتي</h2><p>اعرض تقدمك في ${info.title} دون خلطه بالمادة الأخرى.</p><button onclick="go('${subject}','awards')">عرض إنجازاتي ←</button></div></div>`;
  } else if(tab==='learn' && subject==='reading'){
   readingLibrary();return;
+ } else if(tab==='learn' && subject==='math'){
+  mathLibrary();return;
  } else if(tab==='learn'){
   body=`<h2>📚 أتعلم — ${info.title}</h2><p class="small">قائمة المهارات المستهدفة. سيتم استكمال الشرح والأنشطة التفصيلية لكل مهارة لاحقًا.</p><div class="skills">${info.skills.map((x,i)=>`<div class="skill"><span class="tag">مهارة ${i+1}</span><h3>${x}</h3><button onclick="go('${subject}','practice')">تجربة تدريب ${info.title}</button></div>`).join('')}</div>`;
  } else if(tab==='practice' && subject==='reading'){
   readingLibrary();return;
+ } else if(tab==='practice' && subject==='math'){
+  mathLibrary();return;
  } else if(tab==='practice'){
   const q=questions[subject];
   body=`<h2>✎ أتدرب — ${info.title}</h2><p class="small">سؤال تجريبي واحد من ${info.title}؛ لا يُعد اختبار إتقان شاملًا.</p><div class="question"><span class="tag">${info.title} · سؤال تجريبي</span><h2>${q.q}</h2><div class="answers">${q.a.map((a,i)=>`<button onclick="answer(${i})">${a}</button>`).join('')}</div><div class="feedback" id="feedback" aria-live="polite"></div></div>`;
  } else if(tab==='awards'){
-  if(subject==='reading'){body=`<h2>🏆 إنجازاتي — القراءة</h2><div class="card"><h2>${Object.keys(readingResults).length} من ${passages.length} قطع</h2>${passages.map((p,i)=>`<p>${p.title}: ${readingResults[i]!==undefined?readingResults[i]+' نجوم من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('reading','practice')">قطع القراءة</button></div>`;}else body=`<h2>🏆 إنجازاتي — ${info.title}</h2><div class="card"><h2>${done[subject]?'⭐ أحسنت! أنجزت التدريب التجريبي':'ابدأ التدريب لتجمع نجمة الإنجاز'}</h2><p>التقدم المسجل في ${info.title}: ${done[subject]?'١ من ١ نشاط تجريبي':'٠ من ١ نشاط تجريبي'}.</p><div class="track"><div class="fill" style="width:${done[subject]?100:0}%"></div></div><button onclick="go('${subject}','practice')">الذهاب إلى تدريب ${info.title}</button></div><p class="small">إنجازات المادة الأخرى محفوظة بصورة مستقلة.</p>`;
+  if(subject==='reading'){body=`<h2>🏆 إنجازاتي — القراءة</h2><div class="card"><h2>${Object.keys(readingResults).length} من ${passages.length} قطع</h2>${passages.map((p,i)=>`<p>${p.title}: ${readingResults[i]!==undefined?readingResults[i]+' نجوم من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('reading','practice')">قطع القراءة</button></div>`;}else if(subject==='math'){body=`<h2>🏆 إنجازاتي — الرياضيات</h2><div class="card"><h2>${Object.keys(mathResults).length} من ٦ محطات</h2>${mathMissions.map((name,i)=>`<p>${name}: ${mathResults[i]!==undefined?mathResults[i]+' إجابة صحيحة من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('math','practice')">خريطة الرياضيات</button></div>`;}else body=`<h2>🏆 إنجازاتي — ${info.title}</h2><div class="card"><h2>${done[subject]?'⭐ أحسنت! أنجزت التدريب التجريبي':'ابدأ التدريب لتجمع نجمة الإنجاز'}</h2><p>التقدم المسجل في ${info.title}: ${done[subject]?'١ من ١ نشاط تجريبي':'٠ من ١ نشاط تجريبي'}.</p><div class="track"><div class="fill" style="width:${done[subject]?100:0}%"></div></div><button onclick="go('${subject}','practice')">الذهاب إلى تدريب ${info.title}</button></div><p class="small">إنجازات المادة الأخرى محفوظة بصورة مستقلة.</p>`;
  }
  root.innerHTML=top+body;
 }
