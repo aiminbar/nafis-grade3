@@ -104,10 +104,14 @@ function readingLibrary(){
  <button class="scene-hotspot station-farm" onclick="startReading(2)" aria-label="المغامرة الثالثة: رحلة المزرعة" title="رحلة المزرعة"></button>
  <button class="scene-hotspot station-playground" onclick="startReading(3)" aria-label="المغامرة الرابعة: تحدي الملعب" title="تحدي الملعب"></button>
  <button class="scene-hotspot station-water" onclick="startReading(4)" aria-label="المغامرة الخامسة: حراس الماء" title="حراس الماء"></button>
- <button class="scene-hotspot station-begin" onclick="startReading(0)" aria-label="ابدأ المغامرة الأولى" title="ابدأ المغامرة"></button>
+ <button class="scene-hotspot station-begin" onclick="startNextReading()" aria-label="ابدأ أو تابع مغامرات القراءة بالترتيب" title="ابدأ أو تابع رحلتك"></button>
  <button class="scene-hotspot station-achievements" onclick="go('reading','awards')" aria-label="إنجازاتي في القراءة" title="إنجازاتي"></button>
  </div></div>
  <div class="adventure-progress">🏅 ${count} من ${passages.length} مغامرات مكتملة · ⭐ ${totalStars} نجمة</div>`;
+}
+function startNextReading(){
+ const next=passages.findIndex((_,i)=>readingResults[i]===undefined);
+ startReading(next<0?0:next);
 }
 function startReading(i){passageIndex=i;readingIndex=0;readingCorrect=0;readingLocked=false;stars=0;mistakes=0;mode='story';showStory()}
 function showStory(){
@@ -174,10 +178,14 @@ function mathLibrary(){
  <img class="scene-image" src="nafis-math-map.png" alt="خريطة مغامرات الرياضيات، ست محطات تعليمية" loading="eager">
  <div class="reading-map-actions">
  ${mathMissions.map((name,i)=>`<button class="scene-hotspot math-station-${i+1}" onclick="startMath(${i})" aria-label="المحطة ${i+1}: ${name}" title="${name}"></button>`).join('')}
- <button class="scene-hotspot math-begin" onclick="startMath(0)" aria-label="ابدأ المغامرة الأولى"></button>
+ <button class="scene-hotspot math-begin" onclick="startNextMath()" aria-label="ابدأ أو تابع مغامرات الرياضيات بالترتيب"></button>
  <button class="scene-hotspot math-awards" onclick="go('math','awards')" aria-label="إنجازاتي في الرياضيات"></button>
  </div></div>
  <div class="adventure-progress">🏅 ${count} من ٦ محطات مكتملة · ⭐ ${Object.values(mathResults).reduce((a,b)=>a+b,0)} إجابة صحيحة</div>`;
+}
+function startNextMath(){
+ const next=mathMissions.findIndex((_,i)=>mathResults[i]===undefined);
+ startMath(next<0?0:next);
 }
 function startMath(i){mathMissionIndex=i;mathQuestionIndex=0;mathCorrect=0;showMathQuestion()}
 function showMathQuestion(){
