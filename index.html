@@ -61,7 +61,7 @@
 .math-fraction-strip>span.shaded{background:#9d7ad2}
 .math-groups{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}.math-groups>span{background:white;border:2px dashed #9d7ad2;border-radius:12px;padding:10px;line-height:2}
 .math-data-row{display:flex;align-items:center;gap:10px;margin:10px auto;max-width:480px;text-align:right}.math-data-row>span{width:75px}.math-data-bar{height:24px;background:#9d7ad2;border-radius:6px}.math-rectangle{width:210px;height:105px;border:4px solid #8b6ab5;display:grid;place-items:center;margin:10px auto;background:white}
-.fraction-choices{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0}.fraction-choice{background:white;border:2px solid #cab7e6;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}.fraction-choice.chosen{border-color:#6442aa;background:#efe7ff;box-shadow:0 0 0 3px #c5adea}.fraction-choice .math-fraction-strip>span{width:25px;height:34px}.math-choice-title{text-align:center;font-weight:700}</style></head><body><aside><h2>✦ نافس</h2><p class="small">رحلة التعلم والإنجاز</p><nav id="nav"><button class="active" data-page="home">⌂ الرئيسية</button><button data-page="intro">✧ أتهيأ لنافس</button><button data-page="reading">▤ القراءة</button><button data-page="math">▦ الرياضيات</button><div id="subjectNav" class="subject-nav" hidden></div><button data-page="teacher">▣ للمعلمة</button></nav></aside><main><section class="page active" id="home">
+.fraction-choices{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0}.fraction-choice{background:white;border:2px solid #cab7e6;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer}.fraction-choice.chosen{border-color:#6442aa;background:#efe7ff;box-shadow:0 0 0 3px #c5adea}.fraction-choice .math-fraction-strip>span{width:25px;height:34px}.math-choice-title{text-align:center;font-weight:700}.indicator-report-row{border-top:1px solid #e6dff1;padding:10px 0}.indicator-report-row p{margin:5px 0;color:#655e73}</style></head><body><aside><h2>✦ نافس</h2><p class="small">رحلة التعلم والإنجاز</p><nav id="nav"><button class="active" data-page="home">⌂ الرئيسية</button><button data-page="intro">✧ أتهيأ لنافس</button><button data-page="reading">▤ القراءة</button><button data-page="math">▦ الرياضيات</button><div id="subjectNav" class="subject-nav" hidden></div><button data-page="teacher">▣ للمعلمة</button></nav></aside><main><section class="page active" id="home">
 <div class="illustrated-home">
 <img class="scene-image" src="nafis-home.png" alt="رحلة نافس: عالم القراءة والرياضيات، مع شخصيتي المستكشف والمستكشفة" loading="eager">
 <div class="scene-actions" aria-label="التنقل من لوحات المغامرة">
@@ -101,6 +101,23 @@ function revealHint(){
  msg.innerHTML='💡 تلميح المستكشف: ابحث في القصة عن الفكرة أو الحدث المرتبط بالسؤال. يمكنك فتح النص بالأعلى والعودة إليه.';
 }
 
+const readingIndicatorNames=["معاني المفردات","تصنيف الكلمات","توظيف المفردات","الفكرة الرئيسة","المعلومات المباشرة","تسلسل الأحداث","الأسباب والنتائج","المقارنة والعلاقات","التعبيرات الأدبية","الرأي والتبرير","وضوح المعلومات","معقولية الأحداث","اقتراح الحلول"];
+let readingIndicatorAttempts={};
+try{readingIndicatorAttempts=JSON.parse(localStorage.getItem('nafis-reading-indicator-attempts')||'{}')||{}}catch(e){}
+function recordReadingIndicator(correct){
+ const id=passages[passageIndex].indicators[readingIndex],key=passageIndex+'-'+readingIndex;
+ const prev=readingIndicatorAttempts[key]||{indicator:id,attempts:0,firstTryCorrect:false,completed:false};
+ readingIndicatorAttempts[key]={indicator:id,attempts:prev.attempts+1,firstTryCorrect:prev.firstTryCorrect||(correct&&firstTry),completed:prev.completed||correct,neededSupport:prev.neededSupport||!correct};
+ try{localStorage.setItem('nafis-reading-indicator-attempts',JSON.stringify(readingIndicatorAttempts))}catch(e){}
+}
+function readingIndicatorReport(){
+ const groups=readingIndicatorNames.map((name,i)=>{
+ const records=Object.values(readingIndicatorAttempts).filter(x=>x.indicator===i+1);
+ const first=records.filter(x=>x.firstTryCorrect).length,supported=records.filter(x=>x.completed&&!x.firstTryCorrect).length;
+ return '<div class="indicator-report-row"><strong>مؤشر '+(i+1)+' — '+name+'</strong><p>'+(records.length?'صحيح من أول محاولة: '+first+' · بعد الدعم: '+supported+' · أسئلة مجرّبة: '+records.length:'لم يُقَس بعد')+'</p></div>';
+ });
+ return '<div class="card"><h3>📋 متابعة مؤشرات القراءة الـ١٣</h3><p>هذه نتائج تدريبية وليست شهادة إتقان رسمية.</p>'+groups.join('')+'</div>';
+}
 function readingLibrary(){
  const count=Object.keys(readingResults).length;
  const totalStars=Object.values(readingResults).reduce((a,b)=>a+Number(b||0),0);
@@ -129,14 +146,14 @@ function showStory(){
 function renderReadingQuestion(){
  mode='quiz';chosen=-1;readingLocked=false;firstTry=true;
  const p=passages[passageIndex],q=p.questions[readingIndex],pct=Math.round(readingIndex/p.questions.length*100);
- document.getElementById('readingContent').innerHTML=`<div class="quest-head"><div><span class="tag">${missions[passageIndex]}</span><h1>⭐ التحدي ${readingIndex+1} من ${p.questions.length}</h1></div><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(p.questions.length-stars)}</div></div><div class="track"><div class="fill" style="width:${pct}%"></div></div><details class="story-reference"><summary>📖 أحتاج الرجوع إلى القصة</summary><div class="story-scroll"><h3>${p.title}</h3><p>${p.story}</p></div></details><div class="quest-box"><span class="tag">${heroAvatar} تحدي المستكشف · 🔍 ابحث عن الدليل في النص</span><h2>${q[0]}</h2><div class="answers quest-answers">${q[1].map((x,i)=>`<button onclick="answerReading(${i})"><span class="choice-symbol">${['أ','ب','ج','د'][i]}</span> ${x}</button>`).join('')}</div><div class="hint-action"><button type="button" onclick="revealHint()">💡 أحتاج تلميحًا</button></div><div id="readingFeedback" class="feedback" aria-live="polite"></div><div id="readingNext"></div></div><div class="mission-actions"><button onclick="showStory()">📜 قراءة القصة كاملة</button><button onclick="readingLibrary()">🗺️ خريطة المغامرات</button></div>`;
+ document.getElementById('readingContent').innerHTML=`<div class="quest-head"><div><span class="tag">${missions[passageIndex]}</span><h1>⭐ التحدي ${readingIndex+1} من ${p.questions.length}</h1></div><div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(p.questions.length-stars)}</div></div><div class="track"><div class="fill" style="width:${pct}%"></div></div><details class="story-reference"><summary>📖 أحتاج الرجوع إلى القصة</summary><div class="story-scroll"><h3>${p.title}</h3><p>${p.story}</p></div></details><div class="quest-box"><span class="tag">${heroAvatar} تحدي المستكشف · 🎯 مؤشر ${p.indicators[readingIndex]}: ${readingIndicatorNames[p.indicators[readingIndex]-1]}</span><h2>${q[0]}</h2><div class="answers quest-answers">${q[1].map((x,i)=>`<button onclick="answerReading(${i})"><span class="choice-symbol">${['أ','ب','ج','د'][i]}</span> ${x}</button>`).join('')}</div><div class="hint-action"><button type="button" onclick="revealHint()">💡 أحتاج تلميحًا</button></div><div id="readingFeedback" class="feedback" aria-live="polite"></div><div id="readingNext"></div></div><div class="mission-actions"><button onclick="showStory()">📜 قراءة القصة كاملة</button><button onclick="readingLibrary()">🗺️ خريطة المغامرات</button></div>`;
 }
 function answerReading(i){
  if(readingLocked)return;
  const q=passages[passageIndex].questions[readingIndex],correct=i===q[2];
  const buttons=[...document.querySelectorAll('#readingContent .quest-answers button')];
- if(!correct){firstTry=false;mistakes++;buttons[i].classList.add('wrong');document.getElementById('readingFeedback').innerHTML='💡 ليست الإجابة المناسبة. ارجع إلى القصة، وابحث عن الجملة التي تساعدك. جرّب مرة أخرى!';return}
- readingLocked=true;readingCorrect++;if(firstTry){stars++;sparkle()}
+ if(!correct){recordReadingIndicator(false);firstTry=false;mistakes++;buttons[i].classList.add('wrong');document.getElementById('readingFeedback').innerHTML='💡 ليست الإجابة المناسبة. ارجع إلى القصة، وابحث عن الجملة التي تساعدك. جرّب مرة أخرى!';return}
+ recordReadingIndicator(true);readingLocked=true;readingCorrect++;if(firstTry){stars++;sparkle()}
  buttons.forEach((b,j)=>{b.disabled=true;if(j===q[2])b.classList.add('correct')});
  document.getElementById('readingFeedback').innerHTML='🎉 أحسنت! '+q[3]+(firstTry?' ⭐ ربحت نجمة!':' 🌱 رائع أنك واصلت المحاولة!');
  document.getElementById('readingNext').innerHTML=`<button class="primary" onclick="nextReading()">${readingIndex===passages[passageIndex].questions.length-1?'افتح صندوق الإنجاز 🎁':'التحدي التالي ✨'} ←</button>`;
@@ -322,7 +339,7 @@ function renderSubject(){
   const q=questions[subject];
   body=`<h2>✎ أتدرب — ${info.title}</h2><p class="small">سؤال تجريبي واحد من ${info.title}؛ لا يُعد اختبار إتقان شاملًا.</p><div class="question"><span class="tag">${info.title} · سؤال تجريبي</span><h2>${q.q}</h2><div class="answers">${q.a.map((a,i)=>`<button onclick="answer(${i})">${a}</button>`).join('')}</div><div class="feedback" id="feedback" aria-live="polite"></div></div>`;
  } else if(tab==='awards'){
-  if(subject==='reading'){body=`<h2>🏆 إنجازاتي — القراءة</h2><div class="card"><h2>${Object.keys(readingResults).length} من ${passages.length} قطع</h2>${passages.map((p,i)=>`<p>${p.title}: ${readingResults[i]!==undefined?readingResults[i]+' نجوم من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('reading','practice')">قطع القراءة</button></div>`;}else if(subject==='math'){body=`<h2>🏆 إنجازاتي — الرياضيات</h2><div class="card"><h2>${Object.keys(mathResults).length} من ٦ محطات</h2>${mathMissions.map((name,i)=>`<p>${name}: ${mathResults[i]!==undefined?mathResults[i]+' إجابة صحيحة من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('math','practice')">خريطة الرياضيات</button></div>`;}else body=`<h2>🏆 إنجازاتي — ${info.title}</h2><div class="card"><h2>${done[subject]?'⭐ أحسنت! أنجزت التدريب التجريبي':'ابدأ التدريب لتجمع نجمة الإنجاز'}</h2><p>التقدم المسجل في ${info.title}: ${done[subject]?'١ من ١ نشاط تجريبي':'٠ من ١ نشاط تجريبي'}.</p><div class="track"><div class="fill" style="width:${done[subject]?100:0}%"></div></div><button onclick="go('${subject}','practice')">الذهاب إلى تدريب ${info.title}</button></div><p class="small">إنجازات المادة الأخرى محفوظة بصورة مستقلة.</p>`;
+  if(subject==='reading'){body=`<h2>🏆 إنجازاتي — القراءة</h2><div class="card"><h2>${Object.keys(readingResults).length} من ${passages.length} قطع</h2>${passages.map((p,i)=>`<p>${p.title}: ${readingResults[i]!==undefined?readingResults[i]+' نجوم من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('reading','practice')">قطع القراءة</button></div>${readingIndicatorReport()}`;}else if(subject==='math'){body=`<h2>🏆 إنجازاتي — الرياضيات</h2><div class="card"><h2>${Object.keys(mathResults).length} من ٦ محطات</h2>${mathMissions.map((name,i)=>`<p>${name}: ${mathResults[i]!==undefined?mathResults[i]+' إجابة صحيحة من ٦':'لم تُنجز بعد'}</p>`).join('')}<button onclick="go('math','practice')">خريطة الرياضيات</button></div>`;}else body=`<h2>🏆 إنجازاتي — ${info.title}</h2><div class="card"><h2>${done[subject]?'⭐ أحسنت! أنجزت التدريب التجريبي':'ابدأ التدريب لتجمع نجمة الإنجاز'}</h2><p>التقدم المسجل في ${info.title}: ${done[subject]?'١ من ١ نشاط تجريبي':'٠ من ١ نشاط تجريبي'}.</p><div class="track"><div class="fill" style="width:${done[subject]?100:0}%"></div></div><button onclick="go('${subject}','practice')">الذهاب إلى تدريب ${info.title}</button></div><p class="small">إنجازات المادة الأخرى محفوظة بصورة مستقلة.</p>`;
  }
  root.innerHTML=top+body;
 }
