@@ -317,7 +317,7 @@ function checkMathAnswer(){
  const correct=mathAnswerMatches(input.value,q[1]),key=mathMissionIndex+'-'+mathQuestionIndex;
  mathQuestionAttempts++;
  const prev=mathAttemptResults[key]||{attempts:0,correct:false};
- mathAttemptResults[key]={...prev,attempts:prev.attempts+1,correct:prev.correct||correct,firstTryCorrect:mathQuestionAttempts===1?correct:prev.firstTryCorrect===true,needsSupport:mathQuestionAttempts===1?!correct:prev.needsSupport===true,latestFirstTryCorrect:mathQuestionAttempts===1?correct:prev.latestFirstTryCorrect===true,latestNeededSupport:mathQuestionAttempts===1?!correct:prev.latestNeededSupport===true,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
+ mathAttemptResults[key]={...prev,attempts:prev.attempts+1,correct:prev.correct||correct,firstTryCorrect:prev.firstTryCorrect===true||(mathQuestionAttempts===1&&correct),needsSupport:prev.needsSupport===true||(mathQuestionAttempts===1&&!correct),latestFirstTryCorrect:mathQuestionAttempts===1?correct:prev.latestFirstTryCorrect===true,latestNeededSupport:mathQuestionAttempts===1?!correct:prev.latestNeededSupport===true,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
  try{localStorage.setItem('nafis-math-indicator-results',JSON.stringify(mathAttemptResults))}catch(e){}
  if(!correct&&mathQuestionAttempts===1){output.innerHTML='<strong>💡 جرّب مرة ثانية</strong><p>'+mathHints[mathMissionIndex][mathQuestionIndex]+'</p>';input.focus();return}
  if(correct&&mathQuestionAttempts===1)mathCorrect++;
@@ -335,7 +335,7 @@ function unifiedProgressReport(){
  const mathEntries=Object.values(mathAttemptResults);
  const rFirst=readingEntries.filter(x=>x.firstTryCorrect).length;
  const rSupport=readingEntries.filter(x=>x.neededSupport).length;
- const mFirst=mathEntries.filter(x=>x.firstTryCorrect).length;
+ const mFirst=mathEntries.filter(x=>x.latestFirstTryCorrect===true||(x.latestFirstTryCorrect===undefined&&x.firstTryCorrect)).length;
  const mSupport=mathEntries.filter(x=>x.latestNeededSupport===true||(x.latestNeededSupport===undefined&&(x.needsSupport||x.remedialAttempts>0))).length;
  const weakMath=mathEntries.filter(x=>x.needsSupport||x.remedialCorrect===false).slice(0,8);
  const weakReading=readingEntries.filter(x=>x.neededSupport&&!x.firstTryCorrect).slice(0,8);
