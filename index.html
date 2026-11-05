@@ -202,35 +202,43 @@ function startMath(i){mathMissionIndex=i;mathQuestionIndex=0;mathCorrect=0;showM
 function normalizeMathAnswer(value){
  return String(value||'').normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٬،,\s]/g,'').replace(/[×xX]/g,'*').replace(/[÷]/g,'/').replace(/[−–]/g,'-').replace(/\u0640/g,'').replace(/[ًٌٍَُِّْ]/g,'').replace(/ة/g,'ه').replace(/أ|إ|آ/g,'ا').toLowerCase();
 }
+const mathHints=[["حدّد منزلة الرقم أولًا.","اكتب قيمة كل رقم حسب منزلته.","قارن المنازل من اليسار.","ابدأ بأصغر عدد.","انظر إلى رقم الآحاد.","لاحظ مقدار الزيادة."],["ابدأ بالآحاد وانتبه لإعادة التجميع.","ابدأ بالآحاد واستلف عند الحاجة.","قرّب العددين لأقرب مئة.","اجمع الكميتين.","اطرح المعار من الإجمالي.","اجمع الناتج مع المطروح."],["عد المجموعات والعناصر في كل مجموعة.","استخدم حقائق الضرب.","تبديل العاملين لا يغير الناتج.","قسّم ٢٤ إلى مجموعات من ٦.","استعن بحقيقة الضرب.","وزع الأقلام بالتساوي."],["عد الأضلاع والرؤوس.","تذكر أوجه المكعب.","اختر وحدة مناسبة لجسم صغير.","اختر وحدة كتلة مناسبة.","احسب الزمن المنقضي.","اجمع أطوال الأضلاع."],["حدد عدد الأجزاء المتساوية.","قارن حجم الجزء.","النصف يساوي ربعين.","قارن العددين.","اطرح الأصغر من الأكبر.","اجمع قيم الجدول."],["اطرح ثم اجمع.","اضرب ثم اقسم.","كل عدد ضعف السابق.","أضف ساعة ثم ٢٠ دقيقة.","المحيط أربعة أمثال الضلع.","اجمع القيم الثلاث."]];
+let mathQuestionAttempts=0;
+function mathTokensOnly(v){return v.match(/[-+]?\d+(?:\.\d+)?/g)||[]}
 function mathAnswerMatches(value,expected){
  const v=normalizeMathAnswer(value),e=normalizeMathAnswer(expected);
  if(v===e)return true;
+ if(mathTokensOnly(e).length>1){const a=mathTokensOnly(v),b=mathTokensOnly(e);return a.length===b.length&&a.every((n,i)=>Number(n)===Number(b[i]));}
  const digit=v.match(/^[-+]?\d+(?:\.\d+)?$/);
  const expectedDigit=e.match(/^[-+]?\d+(?:\.\d+)?/);
- if(digit&&expectedDigit&&Number(v)===Number(expectedDigit[0]))return true;
+ if(digit&&expectedDigit&&mathTokensOnly(e).length===1&&Number(v)===Number(expectedDigit[0]))return true;
  if(v&&e.includes('=')&&v===e.split('=').pop())return true;
  return false;
 }
 function showMathQuestion(){
+ mathQuestionAttempts=0;
  const q=mathChallenges[mathMissionIndex][mathQuestionIndex],objective=mathObjectives[mathMissionIndex][mathQuestionIndex];
  document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><span class="tag">المحطة ${mathMissionIndex+1} من ٦</span><h1>${mathMissions[mathMissionIndex]}</h1><p>التحدي ${mathQuestionIndex+1} من ٦</p></div><div class="question"><p class="tag">🎯 الهدف: ${objective}</p><h2>${q[0]}</h2><label for="mathResponse">اكتب إجابتك هنا</label><input id="mathResponse" class="math-response" type="text" autocomplete="off" inputmode="text" placeholder="إجابتك" onkeydown="if(event.key==='Enter')checkMathAnswer()" /><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="checkMathAnswer()">تحقق من إجابتي</button></div><div id="mathAnswer" class="feedback" aria-live="polite"></div></div>`;
 }
 function checkMathAnswer(){
  const input=document.getElementById('mathResponse'),q=mathChallenges[mathMissionIndex][mathQuestionIndex];
- if(!input||!input.value.trim()){document.getElementById('mathAnswer').textContent='اكتب إجابتك أولًا.';return}
+ const output=document.getElementById('mathAnswer');
+ if(!input||!input.value.trim()){output.textContent='اكتب إجابتك أولًا.';return}
  const correct=mathAnswerMatches(input.value,q[1]),key=mathMissionIndex+'-'+mathQuestionIndex;
+ mathQuestionAttempts++;
  const prev=mathAttemptResults[key]||{attempts:0,correct:false};
- mathAttemptResults[key]={attempts:prev.attempts+1,correct:prev.correct||correct,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
+ mathAttemptResults[key]={attempts:prev.attempts+1,correct:prev.correct||correct,firstTryCorrect:mathQuestionAttempts===1?correct:(prev.firstTryCorrect||false),needsSupport:!correct,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
  try{localStorage.setItem('nafis-math-indicator-results',JSON.stringify(mathAttemptResults))}catch(e){}
+ if(!correct&&mathQuestionAttempts===1){output.innerHTML='<strong>💡 جرّب مرة ثانية</strong><p>'+mathHints[mathMissionIndex][mathQuestionIndex]+'</p>';input.focus();return}
+ if(correct&&mathQuestionAttempts===1)mathCorrect++;
  input.disabled=true;
- mathCorrect+=correct?1:0;
- document.getElementById('mathAnswer').innerHTML=`<strong>${correct?'⭐ إجابة صحيحة!':'تحتاج هذه المهارة إلى مراجعة.'}</strong><p>الإجابة المرجعية: ${q[1]}</p><p>${correct?'أحسنت، أتقنت هذا التحدي.':'قارن إجابتك بالحل، ثم أعد المحاولة لاحقًا لترسيخ المهارة.'}</p><button class="primary" onclick="advanceMath()">${mathQuestionIndex===5?'عرض النتيجة':'السؤال التالي'}</button>`;
+ output.innerHTML='<strong>'+(correct?'⭐ إجابة صحيحة!':'هذه المهارة تحتاج إلى تدريب إضافي.')+'</strong><p>الإجابة المرجعية: '+q[1]+'</p><p>'+(correct&&mathQuestionAttempts>1?'توصلت للحل بعد التلميح.':correct?'أجبت من المحاولة الأولى.':'راجع الحل ثم أعد التدريب لاحقًا.')+'</p><button class="primary" onclick="advanceMath()">'+(mathQuestionIndex===5?'عرض النتيجة':'السؤال التالي')+'</button>';
 }
 function advanceMath(){
  if(mathQuestionIndex<5){mathQuestionIndex++;showMathQuestion();return}
  mathResults[mathMissionIndex]=Math.max(mathResults[mathMissionIndex]||0,mathCorrect);
  try{localStorage.setItem('nafis-math-missions',JSON.stringify(mathResults))}catch(e){}
- document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><h1>🏆 أنهيت ${mathMissions[mathMissionIndex]}</h1><p>نتيجتك المصححة تلقائيًا: ${mathCorrect} من ٦</p><p>النتيجة مؤشر تدريبي أولي وليست حكمًا نهائيًا على إتقان نواتج نافس.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="startMath(mathMissionIndex)">إعادة التحدي</button></div></div>`;
+ document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><h1>🏆 أنهيت ${mathMissions[mathMissionIndex]}</h1><p>الإجابات الصحيحة من المحاولة الأولى: ${mathCorrect} من ٦</p><p>تُسجّل محاولات التلميح بشكل منفصل، وهذه نتيجة تدريبية أولية وليست حكمًا نهائيًا على إتقان نواتج نافس.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="startMath(mathMissionIndex)">إعادة التحدي</button></div></div>`;
 }
 function renderSubject(){
  const info=subjects[subject],root=document.getElementById(subject+'Content');
