@@ -53,6 +53,8 @@
 .math-station-6{left:81%;top:45%;width:18%;height:20%}
 .math-begin{left:35%;top:81%;width:32%;height:17%}
 .math-awards{left:77%;top:82%;width:22%;height:16%}
+.math-response{display:block;width:100%;max-width:520px;padding:15px 18px;margin:12px 0 18px;border:2px solid #c8b8e1;border-radius:14px;background:white;font-size:20px;direction:rtl}
+.math-response:focus{outline:3px solid #e7ddff}
 </style></head><body><aside><h2>✦ نافس</h2><p class="small">رحلة التعلم والإنجاز</p><nav id="nav"><button class="active" data-page="home">⌂ الرئيسية</button><button data-page="intro">✧ أتهيأ لنافس</button><button data-page="reading">▤ القراءة</button><button data-page="math">▦ الرياضيات</button><div id="subjectNav" class="subject-nav" hidden></div><button data-page="teacher">▣ للمعلمة</button></nav></aside><main><section class="page active" id="home">
 <div class="illustrated-home">
 <img class="scene-image" src="nafis-home.png" alt="رحلة نافس: عالم القراءة والرياضيات، مع شخصيتي المستكشف والمستكشفة" loading="eager">
@@ -187,21 +189,48 @@ function startNextMath(){
  const next=mathMissions.findIndex((_,i)=>mathResults[i]===undefined);
  startMath(next<0?0:next);
 }
+const mathObjectives=[
+['تحديد القيمة المنزلية','تحليل العدد إلى قيم منازله','مقارنة أعداد من أربع منازل','ترتيب الأعداد','تقريب الأعداد','إكمال نمط عددي'],
+['إيجاد ناتج الجمع','إيجاد ناتج الطرح','تقدير ناتج الجمع','حل مسألة جمع لفظية','حل مسألة طرح لفظية','التحقق من الطرح بالجمع'],
+['تمثيل الضرب بالجمع المتكرر','استرجاع حقائق الضرب','تطبيق خاصية الإبدال','إيجاد ناتج القسمة','ربط الضرب بالقسمة','حل مسألة توزيع متساوٍ'],
+['تمييز الأشكال المستوية','تمييز المجسمات','اختيار وحدة قياس الطول','اختيار وحدة قياس الكتلة','حساب الزمن المنقضي','إيجاد محيط المستطيل'],
+['تمثيل كسر وحدة','مقارنة كسرين','تمييز كسور متكافئة','قراءة بيانات بسيطة','إيجاد الفرق بين قيم البيانات','جمع قيم جدول بيانات'],
+['حل مسألة متعددة الخطوات','توظيف الضرب والقسمة','استنتاج نمط متضاعف','حساب وقت انتهاء نشاط','حساب محيط مربع','جمع بيانات في سياق لفظي']
+];
+let mathAttemptResults={};try{mathAttemptResults=JSON.parse(localStorage.getItem('nafis-math-indicator-results')||'{}')||{}}catch(e){}
 function startMath(i){mathMissionIndex=i;mathQuestionIndex=0;mathCorrect=0;showMathQuestion()}
+function normalizeMathAnswer(value){
+ return String(value||'').normalize('NFKC').replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[٬،,\s]/g,'').replace(/[×xX]/g,'*').replace(/[÷]/g,'/').replace(/[−–]/g,'-').replace(/\u0640/g,'').replace(/[ًٌٍَُِّْ]/g,'').replace(/ة/g,'ه').replace(/أ|إ|آ/g,'ا').toLowerCase();
+}
+function mathAnswerMatches(value,expected){
+ const v=normalizeMathAnswer(value),e=normalizeMathAnswer(expected);
+ if(v===e)return true;
+ const digit=v.match(/^[-+]?\d+(?:\.\d+)?$/);
+ const expectedDigit=e.match(/^[-+]?\d+(?:\.\d+)?/);
+ if(digit&&expectedDigit&&Number(v)===Number(expectedDigit[0]))return true;
+ if(v&&e.includes('=')&&v===e.split('=').pop())return true;
+ return false;
+}
 function showMathQuestion(){
- const q=mathChallenges[mathMissionIndex][mathQuestionIndex];
- document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><span class="tag">المحطة ${mathMissionIndex+1} من ٦</span><h1>${mathMissions[mathMissionIndex]}</h1><p>التحدي ${mathQuestionIndex+1} من ٦</p></div><div class="question"><h2>${q[0]}</h2><p>فكّر في الحل، ثم اضغط لإظهار الإجابة والتحقق من حلك.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="revealMathAnswer()">إظهار الإجابة</button></div><div id="mathAnswer" class="feedback" aria-live="polite"></div></div>`;
+ const q=mathChallenges[mathMissionIndex][mathQuestionIndex],objective=mathObjectives[mathMissionIndex][mathQuestionIndex];
+ document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><span class="tag">المحطة ${mathMissionIndex+1} من ٦</span><h1>${mathMissions[mathMissionIndex]}</h1><p>التحدي ${mathQuestionIndex+1} من ٦</p></div><div class="question"><p class="tag">🎯 الهدف: ${objective}</p><h2>${q[0]}</h2><label for="mathResponse">اكتب إجابتك هنا</label><input id="mathResponse" class="math-response" type="text" autocomplete="off" inputmode="text" placeholder="إجابتك" onkeydown="if(event.key==='Enter')checkMathAnswer()" /><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="checkMathAnswer()">تحقق من إجابتي</button></div><div id="mathAnswer" class="feedback" aria-live="polite"></div></div>`;
 }
-function revealMathAnswer(){
- const q=mathChallenges[mathMissionIndex][mathQuestionIndex];
- document.getElementById('mathAnswer').innerHTML=`<strong>الإجابة: ${q[1]}</strong><p>هل توصلت للإجابة الصحيحة؟</p><div class="mission-actions"><button onclick="advanceMath(false)">أحتاج تدريبًا</button><button class="primary" onclick="advanceMath(true)">أجبت بشكل صحيح ⭐</button></div>`;
+function checkMathAnswer(){
+ const input=document.getElementById('mathResponse'),q=mathChallenges[mathMissionIndex][mathQuestionIndex];
+ if(!input||!input.value.trim()){document.getElementById('mathAnswer').textContent='اكتب إجابتك أولًا.';return}
+ const correct=mathAnswerMatches(input.value,q[1]),key=mathMissionIndex+'-'+mathQuestionIndex;
+ const prev=mathAttemptResults[key]||{attempts:0,correct:false};
+ mathAttemptResults[key]={attempts:prev.attempts+1,correct:prev.correct||correct,objective:mathObjectives[mathMissionIndex][mathQuestionIndex]};
+ try{localStorage.setItem('nafis-math-indicator-results',JSON.stringify(mathAttemptResults))}catch(e){}
+ input.disabled=true;
+ mathCorrect+=correct?1:0;
+ document.getElementById('mathAnswer').innerHTML=`<strong>${correct?'⭐ إجابة صحيحة!':'تحتاج هذه المهارة إلى مراجعة.'}</strong><p>الإجابة المرجعية: ${q[1]}</p><p>${correct?'أحسنت، أتقنت هذا التحدي.':'قارن إجابتك بالحل، ثم أعد المحاولة لاحقًا لترسيخ المهارة.'}</p><button class="primary" onclick="advanceMath()">${mathQuestionIndex===5?'عرض النتيجة':'السؤال التالي'}</button>`;
 }
-function advanceMath(correct){
- if(correct)mathCorrect++;
+function advanceMath(){
  if(mathQuestionIndex<5){mathQuestionIndex++;showMathQuestion();return}
  mathResults[mathMissionIndex]=Math.max(mathResults[mathMissionIndex]||0,mathCorrect);
  try{localStorage.setItem('nafis-math-missions',JSON.stringify(mathResults))}catch(e){}
- document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><h1>🏆 أنهيت ${mathMissions[mathMissionIndex]}</h1><p>إجاباتك الصحيحة بحسب تقييمك الذاتي: ${mathCorrect} من ٦</p><p>يمكنك إعادة المحطة لتحسين نتيجتك.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="startMath(mathMissionIndex)">إعادة التحدي</button></div></div>`;
+ document.getElementById('mathContent').innerHTML=`<div class="adventure-banner"><h1>🏆 أنهيت ${mathMissions[mathMissionIndex]}</h1><p>نتيجتك المصححة تلقائيًا: ${mathCorrect} من ٦</p><p>النتيجة مؤشر تدريبي أولي وليست حكمًا نهائيًا على إتقان نواتج نافس.</p><div class="mission-actions"><button onclick="mathLibrary()">العودة للخريطة</button><button class="primary" onclick="startMath(mathMissionIndex)">إعادة التحدي</button></div></div>`;
 }
 function renderSubject(){
  const info=subjects[subject],root=document.getElementById(subject+'Content');
