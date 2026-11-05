@@ -293,7 +293,7 @@ function checkMathAnswer(){
  if(!correct&&mathQuestionAttempts===1){output.innerHTML='<strong>💡 جرّب مرة ثانية</strong><p>'+mathHints[mathMissionIndex][mathQuestionIndex]+'</p>';input.focus();return}
  if(correct&&mathQuestionAttempts===1)mathCorrect++;
  input.disabled=true;
- output.innerHTML='<strong>'+(correct?'⭐ إجابة صحيحة!':'هذه المهارة تحتاج إلى تدريب إضافي.')+'</strong><p>الإجابة المرجعية: '+q[1]+'</p><p>'+(correct&&mathQuestionAttempts>1?'توصلت للحل بعد التلميح.':correct?'أجبت من المحاولة الأولى.':'راجع الحل ثم أعد التدريب لاحقًا.')+'</p><button class="primary" onclick="advanceMath()">'+(mathQuestionIndex===5?'عرض النتيجة':'السؤال التالي')+'</button>';
+ output.innerHTML='<strong>'+(correct?'⭐ إجابة صحيحة!':'هذه المهارة تحتاج إلى تدريب إضافي.')+'</strong><p>الإجابة المرجعية: '+q[1]+'</p><p>'+(correct&&mathQuestionAttempts>1?'توصلت للحل بعد التلميح.':correct?'أجبت من المحاولة الأولى.':'راجع الحل ثم أعد التدريب لاحقًا.')+'</p><button class="primary" onclick="'+(!correct&&mathRemedial[key]?'showMathRemedial':'advanceMath')+'()">'+(!correct&&mathRemedial[key]?'تدريب علاجي':mathQuestionIndex===5?'عرض النتيجة':'السؤال التالي')+'</button>';
 }
 function advanceMath(){
  if(mathQuestionIndex<5){mathQuestionIndex++;showMathQuestion();return}
