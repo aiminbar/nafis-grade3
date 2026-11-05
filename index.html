@@ -232,18 +232,28 @@ function mathAnswerMatches(value,expected){
  const v=normalizeMathAnswer(value),e=normalizeMathAnswer(expected);
  if(!v)return false;
  if(v===e)return true;
- // Numeric answers may include a written unit, but not unrelated numbers.
- const numeric=(x)=>/^[-+]?\d+(?:\.\d+)?$/.test(x);
- const unitValue=(x)=>x.replace(/(سنتيمتر(?:ات)?|سم|دقيقه|دقائق|متر(?:ا|ان)?|امتار|م|كيلوغرام|كجم|جرام|غرام|جم)$/,'');
- if(numeric(unitValue(v))&&numeric(unitValue(e)))return Number(unitValue(v))===Number(unitValue(e));
- // Fraction answers must preserve numerator and denominator; never compare by digit sequence alone.
- if(/^\d+\/\d+$/.test(v)&&/^\d+\/\d+$/.test(e))return v===e;
- // Accept the numerical result of a reference equation only for arithmetic equations.
- if(e.includes('=')&&numeric(v)&&numeric(e.split('=').pop()))return Number(v)===Number(e.split('=').pop());
- // Allow a multiplication statement without its computed result if factors match.
- if(e.includes('=')&&v===e.split('=')[0])return true;
- // Written equivalent expressions may vary in spacing and digit glyphs.
- if(v.replace(/[()]/g,'')===e.replace(/[()]/g,''))return true;
+ const number=x=>/^[-+]?\d+(?:\.\d+)?$/.test(x);
+ const units='(?:سنتيمتر(?:ات)?|سم|دقيقه|دقائق|دقيقه|متر(?:ا|ان)?|امتار|م|كيلوغرام|كجم|جرام|غرام|جم)';
+ const stripUnit=x=>x.replace(new RegExp(units+'$'),'');
+ // Only a matching unit family, or a bare number, is accepted.
+ const unitFamily=x=>/^(?:سم|سنتيمتر)/.test(x)?'length-cm':/^(?:متر|امتار)/.test(x)?'length-m':/^(?:دقيقه|دقائق)/.test(x)?'minutes':/^(?:كيلوغرام|كجم)/.test(x)?'mass-kg':/^(?:جرام|غرام|جم)/.test(x)?'mass-g':'';
+ const av=stripUnit(v),ae=stripUnit(e);
+ if(number(av)&&number(ae)){
+  const uv=v.slice(av.length),ue=e.slice(ae.length);
+  return Number(av)===Number(ae)&&(!uv||!ue||unitFamily(uv)===unitFamily(ue));
+ }
+ // Time is a clock value, not a fraction.
+ if(/^\d{1,2}:\d{2}$/.test(e))return /^\d{1,2}:\d{2}$/.test(v)&&v===e;
+ // Fractions must be matched exactly for this question bank.
+ if(/^\d+\/\d+$/.test(e))return v===e;
+ if(e.includes('=')){
+  const lhs=e.split('=')[0],rhs=e.split('=').pop();
+  // Verification questions require the actual equation, not only its answer.
+  if(v===lhs||v===e)return true;
+  // A result alone is valid only for the repeated-addition multiplication tasks.
+  if(mathMissionIndex===2&&mathQuestionIndex===0&&number(v)&&number(rhs))return Number(v)===Number(rhs);
+  return false;
+ }
  return false;
 }
 
