@@ -137,6 +137,7 @@ try {const d=JSON.parse(localStorage.getItem('nafis-subject-progress')||'{}');do
 function save(){try{localStorage.setItem('nafis-subject-progress',JSON.stringify(done))}catch(e){}}
 function go(page,subtab='home'){
  subject=subjects[page]?page:null;tab=subtab;answered=false;
+ try{localStorage.setItem('nafis-current-view',JSON.stringify({page,subtab}));}catch(e){}
  document.querySelectorAll('.page').forEach(e=>e.classList.toggle('active',e.id===page));
  document.querySelectorAll('nav > button').forEach(e=>e.classList.toggle('active',e.dataset.page===page));
  const nav=document.getElementById('subjectNav');
@@ -186,4 +187,14 @@ document.querySelectorAll('nav > button').forEach(b=>b.onclick=()=>go(b.dataset.
 updateHome();
 const teacherIndicators=document.getElementById('teacherIndicators');
 if(teacherIndicators)teacherIndicators.innerHTML=passages.map((p,i)=>`<details><summary>${p.title}</summary><ol>${passageIndicators[i].map((x,j)=>`<li>السؤال ${j+1}: ${x}</li>`).join('')}</ol></details>`).join('');
+try{
+ const last=JSON.parse(localStorage.getItem('nafis-current-view')||'null');
+ const allowedPages=['home','intro','reading','math','practice','games','test','awards','teacher'];
+ const allowedTabs=['home','learn','practice','awards'];
+ if(last&&allowedPages.includes(last.page)){
+  const restoredTab=(last.page==='reading'||last.page==='math')&&allowedTabs.includes(last.subtab)?last.subtab:'home';
+  go(last.page,restoredTab);
+ }
+}catch(e){/* If storage is unavailable, keep the home page. */}
+
 </script></body></html>
